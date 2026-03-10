@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Video Player UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ... Keeping all the exact same CSS as before ... */
+        :root {
+            --bg-color: #1a1e24;
+            --surface-color: #2a2e35;
+            --text-primary: #ffffff;
+            --text-secondary: #8b929b;
+            --accent-blue: #4a90e2;
+            --badge-bg: #2d3b4e;
+            --badge-text: #8ab4f8;
+            --red-notification: #ff4b4b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+            color: var(--text-primary);
+            font-size: 20px;
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px 20px 20px;
+            overflow-x: auto; 
+            scrollbar-width: none; 
+        }
+        
+        .top-nav::-webkit-scrollbar {
+            display: none; 
+        }
+
+        .pill {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .pill:hover {
+            background-color: #3a3f47;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 80px 20px; 
+        }
+
+        @media (min-width: 768px) {
+            main {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+                padding-bottom: 20px;
+            }
+        }
+
+        .folder-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            .folder-item {
+                padding: 12px;
+                background-color: var(--surface-color);
+            }
+            .folder-item:hover {
+                background-color: #3a3f47;
+            }
+        }
+
+        .folder-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-right: 16px;
+            position: relative;
+        }
+
+        .folder-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .folder-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .folder-stats {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .size-badge {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.05);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #222;
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Folders</h1>
+        <div class="header-icons">
+            <i class="fas fa-folder-plus" id="scanBtn" style="cursor: pointer; color: var(--accent-blue);" title="Select Videos"></i>
+            <i class="fas fa-search"></i>
+            <i class="fas fa-th-large"></i>
+            <i class="fas fa-user-circle"></i>
+        </div>
+    </header>
+
+    <input type="file" id="folderInput" multiple accept="video/*" style="display: none;">
+
+    <div class="top-nav">
+        <button class="pill"><i class="fas fa-music"></i> Music</button>
+        <button class="pill"><i class="fas fa-lock"></i> Privacy</button>
+        <button class="pill"><i class="fas fa-share-alt"></i> MXShare</button>
+        <button class="pill"><i class="fas fa-list"></i> Video Playlist</button>
+    </div>
+
+    <main id="folderList">
+        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            <i class="fas fa-video" style="font-size: 40px; margin-bottom: 10px;"></i>
+            <p>Tap the blue icon in the top right to select videos from your phone.</p>
+        </div>
+    </main>
+
+    <div class="toast" id="toastMsg">Ready to scan files</div>
+
+    <button class="fab">
+        <i class="fas fa-play"></i>
+    </button>
+
+    <script>
+        const scanBtn = document.getElementById('scanBtn');
+        const folderInput = document.getElementById('folderInput');
+        const folderList = document.getElementById('folderList');
+
+        scanBtn.addEventListener('click', () => {
+            folderInput.click();
+        });
+
+        folderInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            const videoFolders = {};
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (file.type.startsWith('video/')) {
+                    // MOBILE FIX: Since phones hide the real folder path from websites, 
+                    // we group them into one folder called "Selected Videos"
+                    const folderName = "Selected Videos"; 
+
+                    if (!videoFolders[folderName]) {
+                        videoFolders[folderName] = { count: 0, totalSize: 0, files: [] };
+                    }
+
+                    videoFolders[folderName].count++;
+                    videoFolders[folderName].totalSize += file.size;
+                    videoFolders[folderName].files.push(file);
+                }
+            }
+
+            renderFolders(videoFolders);
+        });
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function renderFolders(folders) {
+            folderList.innerHTML = ''; 
+            const folderNames = Object.keys(folders);
+
+            if (folderNames.length === 0) {
+                folderList.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-secondary);">No videos selected.</p>';
+                return;
+            }
+
+            folderNames.forEach(name => {
+                const data = folders[name];
+                const sizeFormatted = formatBytes(data.totalSize);
+                const videoText = data.count === 1 ? 'video' : 'videos';
+
+                const folderHTML = `
+                    <div class="folder-item">
+                        <div class="folder-icon"><i class="fas fa-folder"></i></div>
+                        <div class="folder-info">
+                            <div class="folder-name">${name}</div>
+                            <div class="folder-stats">${data.count} ${videoText} <span class="size-badge">${sizeFormatted}</span></div>
+                        </div>
+                    </div>
+                `;
+                folderList.insertAdjacentHTML('beforeend', folderHTML);
+            });
+        }
+    </script>
+</body>
+</html>
