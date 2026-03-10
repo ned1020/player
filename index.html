@@ -88,4 +88,138 @@
             display: flex;
             align-items: center;
             padding: 12px 0;
-            cursor
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05); /* Added slight divider */
+        }
+
+        .file-icon {
+            min-width: 50px;
+            height: 50px;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: var(--accent-blue);
+            margin-right: 16px;
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden; /* Prevents long names from breaking layout */
+        }
+
+        .file-name {
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adds '...' if the file name is too long */
+        }
+
+        .file-stats {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .size-badge {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Videos</h1>
+        <div class="header-icons">
+            <i class="fas fa-file-video" id="scanBtn" style="cursor: pointer; color: var(--accent-blue);" title="Select Videos"></i>
+            <i class="fas fa-search"></i>
+            <i class="fas fa-ellipsis-v"></i>
+        </div>
+    </header>
+
+    <input type="file" id="fileInput" multiple accept="video/*" style="display: none;">
+
+    <div class="top-nav">
+        <button class="pill"><i class="fas fa-music"></i> Music</button>
+        <button class="pill"><i class="fas fa-lock"></i> Privacy</button>
+        <button class="pill"><i class="fas fa-share-alt"></i> MXShare</button>
+        <button class="pill"><i class="fas fa-list"></i> Video Playlist</button>
+    </div>
+
+    <main id="fileList">
+        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            <i class="fas fa-video" style="font-size: 40px; margin-bottom: 10px;"></i>
+            <p>Tap the blue icon in the top right to select videos.</p>
+        </div>
+    </main>
+
+    <script>
+        const scanBtn = document.getElementById('scanBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        // Open the native file picker
+        scanBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Format file size nicely
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Process files when the user finishes selecting them
+        fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            
+            // Clear the placeholder screen
+            fileList.innerHTML = ''; 
+
+            let hasVideos = false;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // Only show it if it's a video file
+                if (file.type.startsWith('video/')) {
+                    hasVideos = true;
+                    const sizeFormatted = formatBytes(file.size);
+
+                    // Create a list item for each individual file
+                    const fileHTML = `
+                        <div class="file-item">
+                            <div class="file-icon"><i class="fas fa-play"></i></div>
+                            <div class="file-info">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-stats"><span class="size-badge">${sizeFormatted}</span></div>
+                            </div>
+                        </div>
+                    `;
+                    fileList.insertAdjacentHTML('beforeend', fileHTML);
+                }
+            }
+
+            // If they selected files but none of them were videos
+            if (!hasVideos) {
+                fileList.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-secondary);">No videos found in your selection.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
